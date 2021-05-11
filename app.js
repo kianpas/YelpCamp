@@ -2,6 +2,8 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const ejsMate = require("ejs-mate");
+const session = require('express-session')
+const flash = require('connect-flash');
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
 
@@ -14,6 +16,7 @@ mongoose.connect("mongodb://localhost:27017/yelp-camp", {
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
+  useFindAndModify:false
 });
 
 //db연결 확인
@@ -37,9 +40,31 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 //메소드 오버라이딩
 app.use(methodOverride("_method"));
+//퍼블릭 폴더
+app.use(express.static(path.join(__dirname, 'public')))
 
+//익스프레스 세션
+const sessionConfig = {
+  secret:'thisshouldbeabettersecret',
+  resave:false,
+  saveUninitialized:true,
+  cookie:{
+    //httponly 설정
+    httpOnly:true,
+    //쿠키 생존 기간 설정
+    expires:Date.now()+1000 * 60 * 60 * 24 *7,
+    maxAge:Date.now()+1000 * 60 * 60 * 24 *7
+  }
+}
+app.use(session(sessionConfig))
+app.use(flash());
 
-
+//모든 리퀘스트에 플래시
+app.use((req, res, next)=>{
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error')
+  next();
+})
 
 //캠프그라운드로 시작하는 모든 라우트
 app.use("/campgrounds", campgrounds);

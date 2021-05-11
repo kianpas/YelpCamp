@@ -41,11 +41,12 @@ router.get(
     "/",
     //위에서 정의한 joi
     validateCampground,
-    catchAsync(async (req, res) => {
+    catchAsync(async (req, res, next) => {
       //폼이 비어있을 경우 에러 던짐
       // if(!req.body.campground) throw new ExpressError('Invalid Campground Data', 400)
       const campground = new Campground(req.body.campground);
       await campground.save();
+      req.flash('success', "Successfully made a new campground")
       res.redirect(`/campgrounds/${campground._id}`);
     })
   );
@@ -58,7 +59,11 @@ router.get(
       const campground = await Campground.findById(req.params.id).populate(
         "reviews"
       );
-      res.render("campgrounds/show", { campground });
+      if(!campground){
+        req.flash('error', 'Cannot find that campground!')
+        return res.redirect('/campgrounds');
+      }
+      res.render("campgrounds/show", { campground});
     })
   );
   
@@ -80,6 +85,7 @@ router.get(
       const campground = await Campground.findByIdAndUpdate(id, {
         ...req.body.campground,
       });
+      req.flash('success', "Successfully updated campground")
       res.redirect(`/campgrounds/${campground._id}`);
     })
   );
@@ -90,6 +96,7 @@ router.get(
     catchAsync(async (req, res) => {
       const { id } = req.params;
       await Campground.findByIdAndDelete(id);
+      req.flash('success', 'Successfully deleted campground')
       res.redirect("/campgrounds");
     })
   );
