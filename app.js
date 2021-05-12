@@ -6,10 +6,14 @@ const session = require('express-session')
 const flash = require('connect-flash');
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require("./models/user");
 
-
-const campgrounds = require("./routes/campgrounds")
-const reviews = require("./routes/reviews")
+//라우팅모델
+const campgroundRoutes = require("./routes/campgrounds")
+const reviewRoutes = require("./routes/reviews")
+const userRoutes = require('./routes/users');
 
 //몽구스 연결
 mongoose.connect("mongodb://localhost:27017/yelp-camp", {
@@ -43,6 +47,7 @@ app.use(methodOverride("_method"));
 //퍼블릭 폴더
 app.use(express.static(path.join(__dirname, 'public')))
 
+
 //익스프레스 세션
 const sessionConfig = {
   secret:'thisshouldbeabettersecret',
@@ -59,6 +64,13 @@ const sessionConfig = {
 app.use(session(sessionConfig))
 app.use(flash());
 
+//패스포트
+app.use(passport.initialize())
+app.use(passport.session())
+passport.use(new LocalStrategy(User.authenticate()))
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+
 //모든 리퀘스트에 플래시
 app.use((req, res, next)=>{
   res.locals.success = req.flash('success');
@@ -66,11 +78,14 @@ app.use((req, res, next)=>{
   next();
 })
 
-//캠프그라운드로 시작하는 모든 라우트
-app.use("/campgrounds", campgrounds);
-//리뷰 라우트
-app.use('/campgrounds/:id/reviews', reviews)
 
+
+//캠프그라운드로 시작하는 모든 라우트
+app.use("/campgrounds", campgroundRoutes);
+//리뷰 라우트
+app.use('/campgrounds/:id/reviews', reviewRoutes)
+//유저 라우트
+app.use('/', userRoutes);
 
 app.get("/", (req, res) => {
   res.render("home");
