@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-
-//모델
-const Campground = require("../models/campground");
-
+const catchAsync = require("../utils/catchAsync");
 const { campgroundSchema} = require("../schemas.js");
+//isLoggedIn만 가져오도록 한것
+const {isLoggedIn} = require('../middleware');
 
 const ExpressError = require("../utils/ExpressError");
-const catchAsync = require("../utils/catchAsync");
+//모델
+const Campground = require("../models/campground");
 
 //joi 유효성, 모든 라우트에 쓸 것이 아니므로 use 미사용함
 const validateCampground = (req, res, next) => {
@@ -31,15 +31,14 @@ router.get(
   );
   
   //추가 페이지
-  router.get("/new", (req, res) => {
-    //const campground = Campground.findById(req.params.id);
+  router.get("/new", isLoggedIn, (req, res) => {
     res.render("campgrounds/new");
   });
   
   //db에 추가
   router.post(
-    "/",
-    //위에서 정의한 joi
+    "/", isLoggedIn,
+    //위에서 정의한 joi 
     validateCampground,
     catchAsync(async (req, res, next) => {
       //폼이 비어있을 경우 에러 던짐
@@ -53,7 +52,7 @@ router.get(
   
   //id로 페이지 뷰
   router.get(
-    "/:id",
+    "/:id", 
     catchAsync(async (req, res) => {
       //populated로 리뷰참조
       const campground = await Campground.findById(req.params.id).populate(
@@ -69,7 +68,7 @@ router.get(
   
   //에딧페이지 가져오기
   router.get(
-    "/:id/edit",
+    "/:id/edit", isLoggedIn,
     catchAsync(async (req, res) => {
       const campground = await Campground.findById(req.params.id);
       res.render("campgrounds/edit", { campground });
@@ -78,7 +77,7 @@ router.get(
   
   //db 업데이트
   router.put(
-    "/:id",
+    "/:id", isLoggedIn,
     validateCampground,
     catchAsync(async (req, res) => {
       const { id } = req.params;
@@ -92,7 +91,7 @@ router.get(
   
   //삭제
   router.delete(
-    "/:id",
+    "/:id", isLoggedIn,
     catchAsync(async (req, res) => {
       const { id } = req.params;
       await Campground.findByIdAndDelete(id);
