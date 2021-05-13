@@ -5,31 +5,23 @@ const router = express.Router({mergeParams:true});
 const Campground = require("../models/campground");
 const Review = require("../models/review");
 
-const {reviewSchema } = require("../schemas.js");
+const {validateReview, isLoggedIn, isReviewAuthor} = require('../middleware');
 
 const ExpressError = require("../utils/ExpressError");
 const catchAsync = require("../utils/catchAsync");
 
-//리뷰 유효성 검사
-const validateReview = (req, res, next) => {
-    const { error } = reviewSchema.validate(req.body);
-    if (error) {
-      const msg = error.details.map((el) => el.message).join(",");
-      throw new ExpressError(msg, 400);
-    } else {
-      next();
-    }
-  };
+
 
 //리뷰
 router.post(
-    "/",
+    "/", isLoggedIn,
     validateReview,
     catchAsync(async (req, res) => {
       //아이디 일치하는 캠프 하나
       const campground = await Campground.findById(req.params.id);
       //폼으로 넘어온 리뷰
       const review = new Review(req.body.review);
+      review.author = req.user._id;
       //캠프그라운드 모델 reviews에 저장
       campground.reviews.push(review);
       //긱 저장
@@ -41,7 +33,7 @@ router.post(
   );
   
   //리뷰 삭제
-  router.delete('/:reviewId', catchAsync(async (req, res)=>{
+  router.delete('/:reviewId', isLoggedIn, isReviewAuthor, catchAsync(async (req, res)=>{
     //$pull
     const {id, reviewId} = req.params;
     await Campground.findByIdAndUpdate(id, {$pull:{reviews:reviewId}})
