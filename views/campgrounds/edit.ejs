@@ -2,7 +2,7 @@
 
 <div class="row">
   <h1 class="text-center">Edit Campground</h1>
-  <div class="col-6 offset-3">
+  <div class="col-md-6 offset-md-3">
     <form
       action="/campgrounds/<%=campground._id %>?_method=PUT"
       method="post"
@@ -66,11 +66,12 @@
         <div class="valid-feedback">Looks good!</div>
       </div>
       <div class="mb-3">
-        <label for="formFileMultiple" class="form-label">Add more Images</label>
+        <label for="image" class="form-label">Add more Images</label>
         <input
           class="form-control"
           type="file"
           id="formFileMultiple"
+          name="image"
           multiple
         />
       </div>

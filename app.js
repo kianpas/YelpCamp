@@ -1,7 +1,6 @@
 if(process.env.NODE_ENV !== "production"){
   require('dotenv').config();
 }
-console.log(process.env.CLOUDINARY_CLOUD_NAME);
 
 
 const express = require("express");
@@ -15,6 +14,7 @@ const methodOverride = require("method-override");
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require("./models/user");
+const mongoSanitize = require('express-mongo-sanitize');
 
 //라우팅모델
 const userRoutes = require('./routes/users');
@@ -46,6 +46,7 @@ app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+
 //use
 //포스트로 보낸 값을 파싱함
 app.use(express.urlencoded({ extended: true }));
@@ -53,7 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 //퍼블릭 폴더
 app.use(express.static(path.join(__dirname, 'public')))
-
+app.use(mongoSanitize());
 
 //익스프레스 세션
 const sessionConfig = {
