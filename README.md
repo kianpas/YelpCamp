@@ -1,2 +1,2 @@
 # YelpCamp
-Javascript Project
+Javascript Project - UDemy WDB
